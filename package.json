@@ -1,0 +1,30 @@
+{
+  "name": "apex_pmd",
+  "version": "0.0.0-development",
+  "description": "Apex_PMD",
+  "author": "",
+  "bin": {
+    "pmd": "./pmd"
+  },
+  "dependencies": {
+    "express": "^4.17.1",
+    "adm-zip": "^0.4.13",
+    "http": "0.0.0",
+    "jsforce": "^1.9.2",
+    "request": "^2.88.0",
+    "node-jre": "^0.2.3",
+    "pmd-bin": "^1.14.0"
+  },
+  "files": [
+    "/dist"
+  ],
+  "license": "BSD",
+  "main": "index.js",
+  "pmd": {
+    "version": "6.30.0"
+  },
+  "scripts": {
+    "test": "bash test.sh",
+    "start": "node index.js"
+  }
+}

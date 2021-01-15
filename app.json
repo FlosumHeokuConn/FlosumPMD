@@ -1,0 +1,13 @@
+{
+  "name": "Flosum ApexPMD service",
+  "description": "Flosum ApexPMD service.",
+  "repository": "https://github.com/FlosumPMD/NodePMD/",
+  "buildpacks": [
+    {
+      "url": "heroku/jvm"
+    },
+    {
+      "url": "heroku/nodejs"
+    }
+  ]
+}
