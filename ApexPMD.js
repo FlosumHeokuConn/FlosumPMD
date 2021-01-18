@@ -3,8 +3,8 @@ const fs = require('fs');
 const jsforce = require('jsforce');
 const child_process = require('child_process');
 
-//const NAME_SPACE_PREFIX = 'Flosum__';
-const NAME_SPACE_PREFIX = '';
+const NAME_SPACE_PREFIX = 'Flosum__';
+//const NAME_SPACE_PREFIX = '';
 
 class ApexPMD {
 
