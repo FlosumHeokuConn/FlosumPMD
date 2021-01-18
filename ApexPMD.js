@@ -43,7 +43,7 @@ class ApexPMD {
             ['Name']: 'ApexPMD error',
             ['Description']: 'ApexPMD error',
             ['ParentId']: self.jobId,
-            ['Body']: error,
+            ['Body']: Buffer.from(error).toString('base64'),
             ['ContentType']:'text/plain'
         }, function (err, ret) {
             if (err || !ret.success) {
