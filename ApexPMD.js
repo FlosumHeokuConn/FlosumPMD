@@ -67,8 +67,7 @@ class ApexPMD {
             try {
                 let self = this;
                 console.log('Start getting attachment');
-                let bodyPost = {"methodType":"ATTACHMENT",
-                    "body":JSON.stringify(self.attList)}; //,"00P5g000000y28QEAQ"
+                let bodyPost = {opType:"ATTACHMENT",attachment:JSON.stringify(self.attList)}; //,"00P5g000000y28QEAQ"
                 self.connSourceOrg.apex.post("/async",bodyPost,
                     function (err, result) {
                         if (err) {
