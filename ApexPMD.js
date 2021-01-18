@@ -280,7 +280,7 @@ class ApexPMD {
                 if (self.attId!=null){
                     let bodyPost = {"methodType":"FINISH_PMD",
                         "body":self.attId}; //,"00P5g000000y28QEAQ"
-                    self.connSourceOrg.apex.post("/async",bodyPost,
+                    self.connSourceOrg.apex.post("/Flosum/async",bodyPost,
                         function (err, result) {
                             if (err) {
                                 console.log(err.message);
