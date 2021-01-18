@@ -68,7 +68,7 @@ class ApexPMD {
                 let self = this;
                 console.log('Start getting attachment');
                 let bodyPost = {opType:"ATTACHMENT",attachment:JSON.stringify(self.attList)}; //,"00P5g000000y28QEAQ"
-                self.connSourceOrg.apex.post("/flosum/async",bodyPost,
+                self.connSourceOrg.apex.post("/Flosum/async",bodyPost,
                     function (err, result) {
                         if (err) {
                             console.log(err.message);
