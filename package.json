@@ -1,19 +1,15 @@
 {
   "name": "apex_pmd",
-  "version": "0.0.0-development",
+  "version": "1.0.0",
   "description": "Apex_PMD",
-  "author": "",
-  "bin": {
-    "pmd": "./pmd"
-  },
+  "author": "D.Z.",
+
   "dependencies": {
     "express": "^4.17.1",
     "adm-zip": "^0.4.13",
     "http": "0.0.0",
     "jsforce": "^1.9.2",
-    "request": "^2.88.0",
-    "node-jre": "^0.2.3",
-    "pmd-bin": "^1.14.0"
+    "request": "^2.88.0"
   },
   "files": [
     "/dist"
