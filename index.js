@@ -1,23 +1,15 @@
 const ApexPMD = require('./ApexPMD');
 
 const express = require('express');
-const jre = require("node-jre");
 const bodyParser = require("body-parser");
 const app = express();
 const port = process.env.PORT || 5000;
 
-
 var router = express.Router();
 app.use(bodyParser.json({limit: '50mb'}));
-
-
 app.listen(port, () => console.log(`Port: ${port}`));
-
-
 app.post('//apexPMD', (req, res) => {
-
     let data = req.body;
-
     let init = new ApexPMD(data.backUrl, data.sId, data.jobId, data.attList, data.attRuls, data.branchId);
     init.getAttachment().then(() => {
         init.runPMD().then(() => {
@@ -28,20 +20,16 @@ app.post('//apexPMD', (req, res) => {
             }).catch(e => console.log("Critical error : " + e.message));
         }).catch(e => console.log("Critical error : " + e.message));
     }).catch(e => console.log("Critical error : " + e.message));
-
     console.log('end');
     res.send({isSuccess:true,opStatus:'INPROGRESS'});
 });
 
-
 app.post('//oauth/token', (req, res) => {
-
     let user = "admin";
     let pass = "n2c99skEwmWvt3Q1p7d11ne4FKwPqCs85N2RvwNdlfMw4I3NL";
     let username = req.query.username;
     let password = req.query.password;
-
-    if (username == user && password == password) {
+    if (username == user && password == pass) {
         if (req.headers.authorization && req.headers.authorization.search('Basic ') === 0) {
             // fetch login and password
             let userEnv = process.env.username;
