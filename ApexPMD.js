@@ -104,10 +104,7 @@ class ApexPMD {
                         if (!fs.existsSync(tmpFolder)){
                             fs.mkdirSync(tmpFolder);
                         }
-                        if (self.attRuls!=null)
-                        {
-                            fs.writeFileSync(tmpFolder+'ruls.xml', self.attRuls, 'base64');
-                        }
+
                         for (var prop in mapBody) {
                             const buff = Buffer.from(mapBody[prop], 'base64');
                             var zip = new admZip(buff);
@@ -118,8 +115,39 @@ class ApexPMD {
                                 }
                             });
                         }
+
+                        if (self.attRuls!=null)
+                        {
+
+                            let bodyPost = {opType:"RULES",attachment:self.attRuls}; //,"00P5g000000y28QEAQ"
+                            self.connSourceOrg.apex.post(URL_POST,bodyPost,
+                                function (err, result) {
+                                    if (err) {
+                                        console.log(err.message);
+                                        console.log(err);
+                                        self.createErrorLog(err);
+                                        reject('error');
+                                        return;
+                                    }
+                                    let text = Buffer.from(result, 'base64').toString('ascii');
+                                    if (text == 'Null attachment'){
+                                        console.log('Error getting rules: attachment not found.');
+                                        self.createErrorLog('Error getting rules: attachment not found.');
+                                        reject('error');
+                                    }
+                                    else {
+                                        fs.writeFileSync(tmpFolder+'ruls.xml',text);
                         console.log('End getting attachment');
                         resolve('success');
+                                    }
+
+                            });
+                        }
+                        else {
+                            console.log('Error getting rules: null attachment Id.');
+                            self.createErrorLog('Error getting rules: null attachment Id.');
+                            reject('error');
+                        }
                     });
 
             } catch (e) {
