@@ -89,7 +89,14 @@ class ApexPMD {
             try {
                 let self = this;
                 console.log('Start getting attachment');
-                 let bodyPost = {opType:"ATTACHMENT",attachment:JSON.stringify(self.attList)}; //,"00P5g000000y28QEAQ"
+                let size = 100; //size subarray
+                let subarray = []; //new subarray
+                for (let i = 0; i <Math.ceil(self.attList.length/size); i++){
+                    subarray[i] = self.attList.slice((i*size), (i*size) + size);
+                }
+                var count = subarray.length;
+                for (let i=0; i<subarray.length; i++){
+                    let bodyPost = {opType:"ATTACHMENT",attachment:JSON.stringify(subarray[i])}; //,"00P5g000000y28QEAQ"
                 self.connSourceOrg.apex.post(URL_POST,bodyPost,
                     function (err, result) {
                         if (err) {
@@ -99,6 +106,7 @@ class ApexPMD {
                             reject('error');
                             return;
                         }
+                            console.log('Count of remaining: '+count);
                         let mapBody = JSON.parse(result);
                         var tmpFolder = './'+self.jobId+'/';
                         if (!fs.existsSync(tmpFolder)){
@@ -112,10 +120,31 @@ class ApexPMD {
                             zipEntries.forEach(function(zipEntry) {
                                 if (!zipEntry.entryName.endsWith(".xml")){
                                     fs.writeFileSync(tmpFolder+zipEntry.name,zipEntry.getData().toString('utf8'));
+                                    }
+                                });
+                            }
+                            count--;
+                            if (count==0) {
+                                console.log('End getting attachment');
+                                resolve('success');
                                 }
                             });
                         }
 
+            } catch (e) {
+                let self = this;
+                console.log('Error getting attachment' + e.message);
+                self.createErrorLog('Error getting attachment' + e.message);
+                reject('error');
+            }
+        });
+    }
+
+    getRuls() {
+        return new Promise((resolve, reject) => {
+            try {
+                let self = this;
+                console.log('Start getting rules');
                         if (self.attRuls!=null)
                         {
 
@@ -136,8 +165,9 @@ class ApexPMD {
                                         reject('error');
                                     }
                                     else {
+                                var tmpFolder = './'+self.jobId+'/';
                                         fs.writeFileSync(tmpFolder+'ruls.xml',text);
-                        console.log('End getting attachment');
+                                console.log('End getting rules');
                         resolve('success');
                                     }
 
@@ -151,8 +181,9 @@ class ApexPMD {
                     });
 
             } catch (e) {
-                console.log('Error getting attachment' + e.message);
-                self.createErrorLog('Error getting attachment' + e.message);
+                let self = this;
+                console.log('Error getting rules' + e.message);
+                self.createErrorLog('Error getting rules' + e.message);
                 reject('error');
             }
         });
@@ -225,6 +256,7 @@ class ApexPMD {
                     reject('error');
                 }
             } catch (e) {
+                let self = this;
                 console.log(e.message);
                 self.createErrorLog(e.message);
                 reject('error');
@@ -319,6 +351,7 @@ class ApexPMD {
                     reject('error');
                 }
             } catch (e) {
+                let self = this;
                 console.log(e.message);
                 self.createErrorLog(e.message);
                 reject('error');
@@ -367,6 +400,7 @@ class ApexPMD {
                 resolve('success');
 
             } catch (e) {
+                let self = this;
                 console.log(e.message);
                 self.createErrorLog(e.message);
                 reject('error');
