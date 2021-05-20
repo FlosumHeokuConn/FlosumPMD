@@ -12,10 +12,12 @@ app.post('//apexPMD', (req, res) => {
     let data = req.body;
     let init = new ApexPMD(data.backUrl, data.sId, data.jobId, data.attList, data.attRuls, data.branchId);
     init.getAttachment().then(() => {
-        init.runPMD().then(() => {
-            init.saveResults().then(() => {
-                init.updateObjects().then(() => {
-                    init.cleanFolder();
+        init.getRuls().then(() => {
+            init.runPMD().then(() => {
+                init.saveResults().then(() => {
+                    init.updateObjects().then(() => {
+                        init.cleanFolder();
+                    }).catch(e => console.log("Critical error : " + e.message));
                 }).catch(e => console.log("Critical error : " + e.message));
             }).catch(e => console.log("Critical error : " + e.message));
         }).catch(e => console.log("Critical error : " + e.message));
@@ -49,7 +51,7 @@ app.post('//oauth/token', (req, res) => {
 });
 
 app.get('//', function (req, res) {
-    res.send('');
+    res.send('Ok. Ver:2.2.0. Ver.PMD: 6.30.0');
 });
 
 app.get('//server/log', function (req, res) {
