@@ -178,8 +178,6 @@ class ApexPMD {
                             self.createErrorLog('Error getting rules: null attachment Id.');
                             reject('error');
                         }
-                    });
-
             } catch (e) {
                 let self = this;
                 console.log('Error getting rules' + e.message);
