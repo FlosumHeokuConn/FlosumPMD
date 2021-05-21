@@ -22,7 +22,6 @@ app.post('//apexPMD', (req, res) => {
             }).catch(e => console.log("Critical error : " + e.message));
         }).catch(e => console.log("Critical error : " + e.message));
     }).catch(e => console.log("Critical error : " + e.message));
-    console.log('end');
     res.send({isSuccess:true,opStatus:'INPROGRESS'});
 });
 
@@ -51,7 +50,7 @@ app.post('//oauth/token', (req, res) => {
 });
 
 app.get('//', function (req, res) {
-    res.send('Ok. Ver:2.2.0. Ver.PMD: 6.30.0');
+    res.send('Ok. Ver:2.2.1. Ver.PMD: 6.34.0');
 });
 
 app.get('//server/log', function (req, res) {
