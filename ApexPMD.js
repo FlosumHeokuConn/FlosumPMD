@@ -68,7 +68,7 @@ class ApexPMD {
             ['Id'] : self.jobId,
             [NAME_SPACE_PREFIX + 'Review_Result__c'] : 0,
             [NAME_SPACE_PREFIX + 'State__c'] : 'CANCELED',
-            [NAME_SPACE_PREFIX + 'Comment__c'] : error,
+            [NAME_SPACE_PREFIX + 'Comment__c'] : 'Heroku service error. See Attachment "ApexPMD error" for details.',
         }, function(err, ret) {
             if (err || !ret.success) {
                 return console.log(err, ret);
@@ -89,8 +89,8 @@ class ApexPMD {
             try {
                 let self = this;
                 console.log('Start getting attachment');
-                let size = 100; //size subarray
-                let subarray = []; //new subarray
+                let size = 100;
+                let subarray = [];
                 for (let i = 0; i <Math.ceil(self.attList.length/size); i++){
                     subarray[i] = self.attList.slice((i*size), (i*size) + size);
                 }
@@ -366,7 +366,7 @@ class ApexPMD {
                 {
                     if (fs.existsSync('./'+self.jobId+'/ruls.xml'))
                     {
-                        var workerProcess = child_process.execSync('bash dist/pmd-bin/bin/run.sh pmd -failOnViolation false -dir ./'+self.jobId+'/'+' -f csv -r ./'+self.jobId+'/result.csv -rulesets ./'+self.jobId+'/ruls.xml -property problem=false -property package=false -property ruleSet=false',function
+                        var workerProcess = child_process.execSync('bash dist/pmd-bin/bin/run.sh pmd -failOnViolation false -dir ./'+self.jobId+'/'+' -f csv -r ./'+self.jobId+'/result.csv -rulesets ./'+self.jobId+'/ruls.xml -property problem=false -property package=false -property ruleSet=false -shortnames -t 0',function
                             (error, stdout, stderr) {
 
                             if (error) {
