@@ -6,7 +6,6 @@ const child_process = require('child_process');
 const NAME_SPACE_PREFIX = 'Flosum__';
 const URL_POST = '/Flosum/async';
 
-
 class ApexPMD {
 
     instUrl;
@@ -41,74 +40,6 @@ class ApexPMD {
         this.isContinue = true;
     }
 
-    createErrorLog(error){
-        let self = this;
-        self.connSourceOrg.sobject("Attachment").create({
-            ['Name']: 'ApexPMD error',
-            ['Description']: 'ApexPMD error',
-            ['ParentId']: self.jobId,
-            ['Body']: Buffer.from(error).toString('base64'),
-            ['ContentType']:'text/plain'
-        }, function (err, ret) {
-            if (err || !ret.success) {
-                console.log(err);
-                return;
-            }
-            console.log("Created error attachment id : " + ret.id);
-        });
-        self.connSourceOrg.sobject(NAME_SPACE_PREFIX + "Review_Result__c").find({
-            [NAME_SPACE_PREFIX + 'Review_Job__c']:self.jobId
-        }).update({
-            [NAME_SPACE_PREFIX + 'Issues__c']: 0,
-            [NAME_SPACE_PREFIX + 'State__c']: 'CANCELED'
-        }, function(err, rets) {
-            if (err) {
-                return console.log(err);
-            }
-            console.log('Updated Review_Result Successfully : ' + rets[0].id);
-        });
-        self.connSourceOrg.sobject(NAME_SPACE_PREFIX + "Flosum_Task__c").update({
-            ['Id'] : self.jobId,
-            [NAME_SPACE_PREFIX + 'Review_Result__c'] : 0,
-            [NAME_SPACE_PREFIX + 'State__c'] : 'CANCELED',
-            [NAME_SPACE_PREFIX + 'Comment__c'] : 'Heroku service error. See Attachment "ApexPMD error" for details.',
-        }, function(err, ret) {
-            if (err || !ret.success) {
-                return console.log(err, ret);
-            }
-            console.log('Updated Flosum_Task Successfully : ' + ret.id);
-        });
-    }
-
-    cleanFolder(){
-        return new Promise((resolve, reject) => {
-            try {
-                let self = this;
-                console.log('delete temp folder: '+self.jobId);
-                fs.rmdirSync('./'+self.jobId+'/', { recursive: true });
-                if (self.subArray.length>0){
-                    console.log('continue');
-                    self.isContinue = true;
-                    //let result = getAttachment();
-                    //self.getAttachment();
-                }
-                else {
-                    console.log('finish');
-                    self.isContinue = false;
-                }
-                console.log('End cleanFolder');
-                resolve('success');
-            } catch (e) {
-                let self = this;
-                self.isContinue = false;
-                console.log('Error getting attachment' + e.message);
-                self.createErrorLog('Error getting attachment' + e.message);
-                reject('error');
-            }
-        });
-    }
-
-
     getAttachment() {
         return new Promise((resolve, reject) => {
             try {
@@ -122,10 +53,9 @@ class ApexPMD {
                         }
                     }
                     partSubArray = self.subArray.splice(0, 10);
-                    console.log(partSubArray.length);
-                if (self.subArray.length==0){
-                    self.isContinue = false;
-                }
+                    if (self.subArray.length==0){
+                        self.isContinue = false;
+                    }
                     var count = partSubArray.length;
                     for (let i = 0; i < partSubArray.length; i++) {
                         let bodyPost = {opType: "ATTACHMENT", attachment: JSON.stringify(partSubArray[i])}; //,"00P5g000000y28QEAQ"
@@ -180,7 +110,6 @@ class ApexPMD {
                 console.log('Start getting rules');
                 if (self.attRuls!=null)
                 {
-
                     let bodyPost = {opType:"RULES",attachment:self.attRuls}; //,"00P5g000000y28QEAQ"
                     self.connSourceOrg.apex.post(URL_POST,bodyPost,
                         function (err, result) {
@@ -205,7 +134,6 @@ class ApexPMD {
                                 console.log('End getting rules');
                                 resolve('success');
                             }
-
                         });
                 }
                 else {
@@ -235,7 +163,6 @@ class ApexPMD {
                     {
                         var workerProcess = child_process.execSync('bash dist/pmd-bin/bin/run.sh pmd -failOnViolation false -dir ./'+self.jobId+'/'+' -f csv -r ./'+self.jobId+'/result.csv -rulesets ./'+self.jobId+'/ruls.xml -property problem=false -property package=false -property ruleSet=false -shortnames -t 0',function
                             (error, stdout, stderr) {
-
                             if (error) {
                                 self.createErrorLog(error.stack);
                                 self.isContinue = false;
@@ -254,7 +181,6 @@ class ApexPMD {
                         self.createErrorLog('PMD analysis rules file not found');
                         reject('error');
                     }
-
                 }
                 else {
                     console.log('Files for PMD analysis not found');
@@ -262,8 +188,6 @@ class ApexPMD {
                     self.createErrorLog('Files for PMD analysis not found');
                     reject('error');
                 }
-
-
                 console.log('PMD analysis finished');
                 resolve('success');
 
@@ -460,7 +384,7 @@ class ApexPMD {
                             }
                         });
                 });
-                
+
             } catch (e) {
                 let self = this;
                 self.isContinue = false;
@@ -471,7 +395,72 @@ class ApexPMD {
         });
     }
 
+    cleanFolder(){
+        return new Promise((resolve, reject) => {
+            try {
+                let self = this;
+                console.log('delete temp folder: '+self.jobId);
+                fs.rmdirSync('./'+self.jobId+'/', { recursive: true });
+                if (self.subArray.length>0){
+                    console.log('continue');
+                    self.isContinue = true;
+                    //let result = getAttachment();
+                    //self.getAttachment();
+                }
+                else {
+                    console.log('finish');
+                    self.isContinue = false;
+                }
+                console.log('End cleanFolder');
+                resolve('success');
+            } catch (e) {
+                let self = this;
+                self.isContinue = false;
+                console.log('Error getting attachment' + e.message);
+                self.createErrorLog('Error getting attachment' + e.message);
+                reject('error');
+            }
+        });
+    }
 
+    createErrorLog(error){
+        let self = this;
+        self.connSourceOrg.sobject("Attachment").create({
+            ['Name']: 'ApexPMD error',
+            ['Description']: 'ApexPMD error',
+            ['ParentId']: self.jobId,
+            ['Body']: Buffer.from(error).toString('base64'),
+            ['ContentType']:'text/plain'
+        }, function (err, ret) {
+            if (err || !ret.success) {
+                console.log(err);
+                return;
+            }
+            console.log("Created error attachment id : " + ret.id);
+        });
+        self.connSourceOrg.sobject(NAME_SPACE_PREFIX + "Review_Result__c").find({
+            [NAME_SPACE_PREFIX + 'Review_Job__c']:self.jobId
+        }).update({
+            [NAME_SPACE_PREFIX + 'Issues__c']: 0,
+            [NAME_SPACE_PREFIX + 'State__c']: 'CANCELED'
+        }, function(err, rets) {
+            if (err) {
+                return console.log(err);
+            }
+            console.log('Updated Review_Result Successfully : ' + rets[0].id);
+        });
+        self.connSourceOrg.sobject(NAME_SPACE_PREFIX + "Flosum_Task__c").update({
+            ['Id'] : self.jobId,
+            [NAME_SPACE_PREFIX + 'Review_Result__c'] : 0,
+            [NAME_SPACE_PREFIX + 'State__c'] : 'CANCELED',
+            [NAME_SPACE_PREFIX + 'Comment__c'] : 'Heroku service error. See Attachment "ApexPMD error" for details.',
+        }, function(err, ret) {
+            if (err || !ret.success) {
+                return console.log(err, ret);
+            }
+            console.log('Updated Flosum_Task Successfully : ' + ret.id);
+        });
+    }
 }
 
 
