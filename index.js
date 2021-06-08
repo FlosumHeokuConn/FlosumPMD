@@ -11,17 +11,20 @@ app.listen(port, () => console.log(`Port: ${port}`));
 app.post('//apexPMD', (req, res) => {
     let data = req.body;
     let init = new ApexPMD(data.backUrl, data.sId, data.jobId, data.attList, data.attRuls, data.branchId);
-    init.getAttachment().then(() => {
-        init.getRuls().then(() => {
-            init.runPMD().then(() => {
-                init.saveResults().then(() => {
-                    init.updateObjects().then(() => {
-                        init.cleanFolder();
-                    }).catch(e => console.log("Critical error : " + e.message));
-                }).catch(e => console.log("Critical error : " + e.message));
-            }).catch(e => console.log("Critical error : " + e.message));
-        }).catch(e => console.log("Critical error : " + e.message));
-    }).catch(e => console.log("Critical error : " + e.message));
+
+    const control = async _ => {
+        console.log('Start');
+        while (init.isContinue) {
+            const getAtt =  await init.getAttachment();
+            const getRul =  await init.getRuls();
+            const run =  await init.runPMD();
+            const save =  await init.saveResults();
+            const updt =  await init.updateObjects();
+            const clean =  await init.cleanFolder();
+        }
+        console.log('Finish');
+    };
+    control();
     res.send({isSuccess:true,opStatus:'INPROGRESS'});
 });
 
@@ -50,7 +53,7 @@ app.post('//oauth/token', (req, res) => {
 });
 
 app.get('//', function (req, res) {
-    res.send('Ok. Ver:2.2.1. Ver.PMD: 6.34.0');
+    res.send('Ok. Ver:2.2.2. Ver.PMD: 6.34.0');
 });
 
 app.get('//server/log', function (req, res) {
