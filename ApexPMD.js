@@ -5,8 +5,7 @@ const child_process = require('child_process');
 
 const NAME_SPACE_PREFIX = 'Flosum__';
 const URL_POST = '/Flosum/async';
-//const NAME_SPACE_PREFIX = '';
-//const URL_POST = '/async';
+
 
 class ApexPMD {
 
@@ -16,12 +15,14 @@ class ApexPMD {
     jobId;
     branchId;
     attRuls;
-    numberIssuesJob;
+    numberIssuesJob = 0;
     stateJob = 'COMPLETED';
     commentJob;
     attId;
     violList;
     mapRuls;
+    subArray;
+    isContinue;
 
     constructor(instUrl, accessToken, jobId, attList, attRuls, branchId) {
         this.instUrl = instUrl;
@@ -36,6 +37,8 @@ class ApexPMD {
         this.jobId = jobId;
         this.mapRuls = [];
         this.violList = [];
+        this.subArray = [];
+        this.isContinue = true;
     }
 
     createErrorLog(error){
@@ -78,9 +81,31 @@ class ApexPMD {
     }
 
     cleanFolder(){
-        let self = this;
-        console.log('delete temp folder: '+self.jobId);
-        fs.rmdirSync('./'+self.jobId+'/', { recursive: true });
+        return new Promise((resolve, reject) => {
+            try {
+                let self = this;
+                console.log('delete temp folder: '+self.jobId);
+                fs.rmdirSync('./'+self.jobId+'/', { recursive: true });
+                if (self.subArray.length>0){
+                    console.log('continue');
+                    self.isContinue = true;
+                    //let result = getAttachment();
+                    //self.getAttachment();
+                }
+                else {
+                    console.log('finish');
+                    self.isContinue = false;
+                }
+                console.log('End cleanFolder');
+                resolve('success');
+            } catch (e) {
+                let self = this;
+                self.isContinue = false;
+                console.log('Error getting attachment' + e.message);
+                self.createErrorLog('Error getting attachment' + e.message);
+                reject('error');
+            }
+        });
     }
 
 
@@ -88,51 +113,59 @@ class ApexPMD {
         return new Promise((resolve, reject) => {
             try {
                 let self = this;
-                console.log('Start getting attachment');
-                let size = 100;
-                let subarray = [];
-                for (let i = 0; i <Math.ceil(self.attList.length/size); i++){
-                    subarray[i] = self.attList.slice((i*size), (i*size) + size);
+                    console.log('Start getting attachment');
+                    let size = 100;
+                    let partSubArray = [];
+                    if (self.subArray.length == 0) {
+                        for (let i = 0; i < Math.ceil(self.attList.length / size); i++) {
+                            self.subArray[i] = self.attList.slice((i * size), (i * size) + size);
+                        }
+                    }
+                    partSubArray = self.subArray.splice(0, 10);
+                    console.log(partSubArray.length);
+                if (self.subArray.length==0){
+                    self.isContinue = false;
                 }
-                var count = subarray.length;
-                for (let i=0; i<subarray.length; i++){
-                    let bodyPost = {opType:"ATTACHMENT",attachment:JSON.stringify(subarray[i])}; //,"00P5g000000y28QEAQ"
-                self.connSourceOrg.apex.post(URL_POST,bodyPost,
-                    function (err, result) {
-                        if (err) {
-                            console.log(err.message);
-                            console.log(err);
-                            self.createErrorLog(err);
-                            reject('error');
-                            return;
-                        }
-                            console.log('Count of remaining: '+count);
-                        let mapBody = JSON.parse(result);
-                        var tmpFolder = './'+self.jobId+'/';
-                        if (!fs.existsSync(tmpFolder)){
-                            fs.mkdirSync(tmpFolder);
-                        }
+                    var count = partSubArray.length;
+                    for (let i = 0; i < partSubArray.length; i++) {
+                        let bodyPost = {opType: "ATTACHMENT", attachment: JSON.stringify(partSubArray[i])}; //,"00P5g000000y28QEAQ"
+                        self.connSourceOrg.apex.post(URL_POST, bodyPost,
+                            function (err, result) {
+                                if (err) {
+                                    console.log(err.message);
+                                    console.log(err);
+                                    self.createErrorLog(err);
+                                    reject('error');
+                                    return;
+                                }
+                                console.log('Count=' + count);
+                                let mapBody = JSON.parse(result);
+                                var tmpFolder = './' + self.jobId + '/';
+                                if (!fs.existsSync(tmpFolder)) {
+                                    fs.mkdirSync(tmpFolder);
+                                }
 
-                        for (var prop in mapBody) {
-                            const buff = Buffer.from(mapBody[prop], 'base64');
-                            var zip = new admZip(buff);
-                            var zipEntries = zip.getEntries(); // an array of ZipEntry records
-                            zipEntries.forEach(function(zipEntry) {
-                                if (!zipEntry.entryName.endsWith(".xml")){
-                                    fs.writeFileSync(tmpFolder+zipEntry.name,zipEntry.getData().toString('utf8'));
-                                    }
-                                });
-                            }
-                            count--;
-                            if (count==0) {
-                                console.log('End getting attachment');
-                                resolve('success');
+                                for (var prop in mapBody) {
+                                    const buff = Buffer.from(mapBody[prop], 'base64');
+                                    var zip = new admZip(buff);
+                                    var zipEntries = zip.getEntries(); // an array of ZipEntry records
+                                    zipEntries.forEach(function (zipEntry) {
+                                        if (!zipEntry.entryName.endsWith(".xml")) {
+                                            fs.writeFileSync(tmpFolder + zipEntry.name, zipEntry.getData().toString('utf8'));
+                                        }
+                                    });
+                                }
+                                count--;
+                                if (count == 0) {
+                                    console.log('End getting attachment');
+                                    resolve('success');
                                 }
                             });
-                        }
+                    }
 
             } catch (e) {
                 let self = this;
+                self.isContinue = false;
                 console.log('Error getting attachment' + e.message);
                 self.createErrorLog('Error getting attachment' + e.message);
                 reject('error');
@@ -145,43 +178,100 @@ class ApexPMD {
             try {
                 let self = this;
                 console.log('Start getting rules');
-                        if (self.attRuls!=null)
-                        {
+                if (self.attRuls!=null)
+                {
 
-                            let bodyPost = {opType:"RULES",attachment:self.attRuls}; //,"00P5g000000y28QEAQ"
-                            self.connSourceOrg.apex.post(URL_POST,bodyPost,
-                                function (err, result) {
-                                    if (err) {
-                                        console.log(err.message);
-                                        console.log(err);
-                                        self.createErrorLog(err);
-                                        reject('error');
-                                        return;
-                                    }
-                                    let text = Buffer.from(result, 'base64').toString('ascii');
-                                    if (text == 'Null attachment'){
-                                        console.log('Error getting rules: attachment not found.');
-                                        self.createErrorLog('Error getting rules: attachment not found.');
-                                        reject('error');
-                                    }
-                                    else {
+                    let bodyPost = {opType:"RULES",attachment:self.attRuls}; //,"00P5g000000y28QEAQ"
+                    self.connSourceOrg.apex.post(URL_POST,bodyPost,
+                        function (err, result) {
+                            if (err) {
+                                console.log(err.message);
+                                console.log(err);
+                                self.isContinue = false;
+                                self.createErrorLog(err);
+                                reject('error');
+                                return;
+                            }
+                            let text = Buffer.from(result, 'base64').toString('ascii');
+                            if (text == 'Null attachment'){
+                                self.isContinue = false;
+                                console.log('Error getting rules: attachment not found.');
+                                self.createErrorLog('Error getting rules: attachment not found.');
+                                reject('error');
+                            }
+                            else {
                                 var tmpFolder = './'+self.jobId+'/';
-                                        fs.writeFileSync(tmpFolder+'ruls.xml',text);
+                                fs.writeFileSync(tmpFolder+'ruls.xml',text);
                                 console.log('End getting rules');
-                        resolve('success');
-                                    }
+                                resolve('success');
+                            }
 
-                            });
-                        }
-                        else {
-                            console.log('Error getting rules: null attachment Id.');
-                            self.createErrorLog('Error getting rules: null attachment Id.');
-                            reject('error');
-                        }
+                        });
+                }
+                else {
+                    self.isContinue = false;
+                    console.log('Error getting rules: null attachment Id.');
+                    self.createErrorLog('Error getting rules: null attachment Id.');
+                    reject('error');
+                }
             } catch (e) {
                 let self = this;
+                self.isContinue = false;
                 console.log('Error getting rules' + e.message);
                 self.createErrorLog('Error getting rules' + e.message);
+                reject('error');
+            }
+        });
+    }
+
+    runPMD(){
+        return new Promise((resolve, reject) => {
+            try {
+                let self = this;
+                console.log('runPMD');
+                if (fs.existsSync('./'+self.jobId))
+                {
+                    if (fs.existsSync('./'+self.jobId+'/ruls.xml'))
+                    {
+                        var workerProcess = child_process.execSync('bash dist/pmd-bin/bin/run.sh pmd -failOnViolation false -dir ./'+self.jobId+'/'+' -f csv -r ./'+self.jobId+'/result.csv -rulesets ./'+self.jobId+'/ruls.xml -property problem=false -property package=false -property ruleSet=false -shortnames -t 0',function
+                            (error, stdout, stderr) {
+
+                            if (error) {
+                                self.createErrorLog(error.stack);
+                                self.isContinue = false;
+                                console.log(error.stack);
+                                console.log('Error code: '+error.code);
+                                console.log('Signal received: '+error.signal);
+                                reject('error');
+                            }
+                            console.log('stdout: ' + stdout);
+                            console.log('stderr: ' + stderr);
+                        });
+                    }
+                    else {
+                        console.log('PMD analysis rules file not found');
+                        self.isContinue = false;
+                        self.createErrorLog('PMD analysis rules file not found');
+                        reject('error');
+                    }
+
+                }
+                else {
+                    console.log('Files for PMD analysis not found');
+                    self.isContinue = false;
+                    self.createErrorLog('Files for PMD analysis not found');
+                    reject('error');
+                }
+
+
+                console.log('PMD analysis finished');
+                resolve('success');
+
+            } catch (e) {
+                let self = this;
+                self.isContinue = false;
+                console.log(e.message);
+                self.createErrorLog(e.message);
                 reject('error');
             }
         });
@@ -214,7 +304,8 @@ class ApexPMD {
                         }
                     }
                     console.log('limit 1000 = '+ self.violList.length);
-                    self.numberIssuesJob = lines.length -2;
+
+                    self.numberIssuesJob =self.numberIssuesJob + (lines.length -2);
                     self.commentJob = 'Number of issues found: '+ self.numberIssuesJob;
                     console.log(self.commentJob);
                     let body = Buffer.from(content,"base64").toString('base64');
@@ -235,6 +326,7 @@ class ApexPMD {
                         self.attId = ret.id;
                         self.connSourceOrg.query("SELECT Id, Name FROM " + NAME_SPACE_PREFIX+"Rule__c", function(err, result) {
                             if (err) {
+                                self.isContinue = false;
                                 self.createErrorLog(err);
                                 reject('error');
                                 return console.error(err);
@@ -250,11 +342,13 @@ class ApexPMD {
                     });
                 }
                 else {
+                    self.isContinue = false;
                     console.log('PMD analysis results file not found');
                     reject('error');
                 }
             } catch (e) {
                 let self = this;
+                self.isContinue = false;
                 console.log(e.message);
                 self.createErrorLog(e.message);
                 reject('error');
@@ -267,38 +361,48 @@ class ApexPMD {
             try {
                 let self = this;
                 let reviewViolationList = [];
-                self.connSourceOrg.sobject(NAME_SPACE_PREFIX + "Flosum_Task__c").update({
-                    ['Id'] : self.jobId,
-                    [NAME_SPACE_PREFIX + 'Review_Result__c'] : self.numberIssuesJob,
-                    [NAME_SPACE_PREFIX + 'State__c'] : self.stateJob,
-                    [NAME_SPACE_PREFIX + 'Comment__c'] : self.commentJob,
-                }, function(err, ret) {
-                    if (err || !ret.success) {
-                        self.createErrorLog(err);
-                        reject('error');
-                        return console.log(err, ret);
-                    }
-                    console.log('Updated Flosum_Task Successfully : ' + ret.id);
-                });
-                self.connSourceOrg.sobject(NAME_SPACE_PREFIX + "Branch__c").update({
-                    ['Id']: self.branchId,
-                    [NAME_SPACE_PREFIX + 'Review_Result__c']: self.numberIssuesJob,
-                    [NAME_SPACE_PREFIX + 'Review_state__c']: 'REVIEWED'
-                }, function(err, ret) {
-                    if (err || !ret.success) {
-                        self.createErrorLog(err);
-                        reject('error');
-                        return console.log(err, ret); }
-                    console.log('Updated Branch Successfully : ' + ret.id);
-                });
+                let state = 'COMPLETED';
+                if (!self.isContinue){
+                    self.connSourceOrg.sobject(NAME_SPACE_PREFIX + "Flosum_Task__c").update({
+                        ['Id'] : self.jobId,
+                        [NAME_SPACE_PREFIX + 'Review_Result__c'] : self.numberIssuesJob,
+                        [NAME_SPACE_PREFIX + 'State__c'] : self.stateJob,
+                        [NAME_SPACE_PREFIX + 'Comment__c'] : self.commentJob,
+                    }, function(err, ret) {
+                        if (err || !ret.success) {
+                            self.isContinue = false;
+                            self.createErrorLog(err);
+                            reject('error');
+                            return console.log(err, ret);
+                        }
+                        console.log('Updated Flosum_Task Successfully : ' + ret.id);
+                    });
+                    self.connSourceOrg.sobject(NAME_SPACE_PREFIX + "Branch__c").update({
+                        ['Id']: self.branchId,
+                        [NAME_SPACE_PREFIX + 'Review_Result__c']: self.numberIssuesJob,
+                        [NAME_SPACE_PREFIX + 'Review_state__c']: 'REVIEWED'
+                    }, function(err, ret) {
+                        if (err || !ret.success) {
+                            self.isContinue = false;
+                            self.createErrorLog(err);
+                            reject('error');
+                            return console.log(err, ret); }
+                        console.log('Updated Branch Successfully : ' + ret.id);
+                    });
+                }
+                else {
+                    state = 'IN PROGRESS';
+                }
+
 
                 self.connSourceOrg.sobject(NAME_SPACE_PREFIX + "Review_Result__c").find({
                     [NAME_SPACE_PREFIX + 'Review_Job__c']:self.jobId
                 }).update({
                     [NAME_SPACE_PREFIX + 'Issues__c']: self.numberIssuesJob,
-                    [NAME_SPACE_PREFIX + 'State__c']: 'COMPLETED'
+                    [NAME_SPACE_PREFIX + 'State__c']: state
                 }, function(err, rets) {
                     if (err) {
+                        self.isContinue = false;
                         self.createErrorLog(err);
                         reject('error');
                         return console.log(err);
@@ -319,37 +423,47 @@ class ApexPMD {
                     self.connSourceOrg.sobject(NAME_SPACE_PREFIX +"Review_Violation__c").create(reviewViolationList, { allowRecursive: true },
                         function(err, rets) {
                             if (err) {
+                                self.isContinue = false;
                                 self.createErrorLog(err);
                                 reject('error');
                                 return console.log(err);
                             }
                             console.log("Created "+rets.length+ " records." );
-                            resolve('success');
+                            self.violList = [];
+                            if (!self.isContinue) {
+                                if (self.attId != null) {
+                                    let bodyPost = {
+                                        "methodType": "FINISH_PMD",
+                                        "body": self.attId
+                                    }; //,"00P5g000000y28QEAQ"
+                                    self.connSourceOrg.apex.post(URL_POST, bodyPost,
+                                        function (err, result) {
+                                            if (err) {
+                                                self.isContinue = false;
+                                                console.log(err.message);
+                                                self.createErrorLog(err);
+                                                reject('error');
+                                                return;
+                                            }
+                                            console.log('endPost');
+                                        });
+                                    resolve('success');
+                                } else {
+                                    self.isContinue = false;
+                                    console.log('Attachment not found');
+                                    self.createErrorLog('Attachment not found');
+                                    reject('error');
+                                }
+                            } else {
+                                console.log('continue working');
+                                resolve('continue');
+                            }
                         });
                 });
-
-                if (self.attId!=null){
-                    let bodyPost = {"methodType":"FINISH_PMD",
-                        "body":self.attId}; //,"00P5g000000y28QEAQ"
-                    self.connSourceOrg.apex.post(URL_POST,bodyPost,
-                        function (err, result) {
-                            if (err) {
-                                console.log(err.message);
-                                self.createErrorLog(err);
-                                reject('error');
-                                return;
-                            }
-                            console.log('endPost');
-                        });
-                    resolve('success');
-                }
-                else {
-                    console.log('Attachment not found');
-                    self.createErrorLog('Attachment not found');
-                    reject('error');
-                }
+                
             } catch (e) {
                 let self = this;
+                self.isContinue = false;
                 console.log(e.message);
                 self.createErrorLog(e.message);
                 reject('error');
@@ -357,53 +471,9 @@ class ApexPMD {
         });
     }
 
-    runPMD(){
-        return new Promise((resolve, reject) => {
-            try {
-                let self = this;
-                console.log('runPMD');
-                if (fs.existsSync('./'+self.jobId))
-                {
-                    if (fs.existsSync('./'+self.jobId+'/ruls.xml'))
-                    {
-                        var workerProcess = child_process.execSync('bash dist/pmd-bin/bin/run.sh pmd -failOnViolation false -dir ./'+self.jobId+'/'+' -f csv -r ./'+self.jobId+'/result.csv -rulesets ./'+self.jobId+'/ruls.xml -property problem=false -property package=false -property ruleSet=false -shortnames -t 0',function
-                            (error, stdout, stderr) {
 
-                            if (error) {
-                                self.createErrorLog(error.stack);
-                                console.log(error.stack);
-                                console.log('Error code: '+error.code);
-                                console.log('Signal received: '+error.signal);
-                                reject('error');
-                            }
-                            console.log('stdout: ' + stdout);
-                            console.log('stderr: ' + stderr);
-                        });
-                    }
-                    else {
-                        console.log('PMD analysis rules file not found');
-                        self.createErrorLog('PMD analysis rules file not found');
-                        reject('error');
-                    }
-
-                }
-                else {
-                    console.log('Files for PMD analysis not found');
-                    self.createErrorLog('Files for PMD analysis not found');
-                    reject('error');
-                }
-
-
-                console.log('PMD analysis finished');
-                resolve('success');
-
-            } catch (e) {
-                let self = this;
-                console.log(e.message);
-                self.createErrorLog(e.message);
-                reject('error');
-            }
-        });
-    }
 }
+
+
+
 module.exports = ApexPMD;
