@@ -80,7 +80,7 @@ class ApexPMD {
                                     var zip = new admZip(buff);
                                     var zipEntries = zip.getEntries(); // an array of ZipEntry records
                                     zipEntries.forEach(function (zipEntry) {
-                                        if (!zipEntry.entryName.endsWith(".xml")) {
+                                        if (zipEntry.name!=null && zipEntry.name!='' && !zipEntry.name.endsWith(".xml") && (zipEntry.name.endsWith(".trigger") || zipEntry.name.endsWith(".page") || zipEntry.name.endsWith(".cls"))) {
                                             fs.writeFileSync(tmpFolder + zipEntry.name, zipEntry.getData().toString('utf8'));
                                         }
                                     });
