@@ -213,21 +213,21 @@ class ApexPMD {
                     let reviewViolation = [];
                     for (let i=1; i<lines.length-1; i++) {
                         let violationStrings = lines[i].split('\",\"');
-                        reviewViolation.push({ name: violationStrings[0].substring(violationStrings[0].lastIndexOf(self.jobId)+19),
+                        self.violList.push({ name: violationStrings[0].substring(violationStrings[0].lastIndexOf(self.jobId)+19),
                             prior: violationStrings[1],
                             pos: violationStrings[2],
                             desc: violationStrings[3],
                             rule: violationStrings[4].slice(0,-1)
                         });
                     }
-                    reviewViolation.sort((a, b) => a.prior > b.prior ? 1 : -1);
+                    /*reviewViolation.sort((a, b) => a.prior > b.prior ? 1 : -1);
                     for (let i=0; i<reviewViolation.length; i++)
                     {
                         if (i<1000){
                             self.violList.push(reviewViolation[i]);
                         }
                     }
-                    console.log('limit 1000 = '+ self.violList.length);
+                    console.log('limit 1000 = '+ self.violList.length);*/
 
                     self.numberIssuesJob =self.numberIssuesJob + (lines.length -2);
                     self.commentJob = 'Number of issues found: '+ self.numberIssuesJob;
