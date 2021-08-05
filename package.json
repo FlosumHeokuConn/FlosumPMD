@@ -17,7 +17,7 @@
   "license": "BSD",
   "main": "index.js",
   "pmd": {
-    "version": "6.30.0"
+    "version": "6.37.0"
   },
   "scripts": {
     "test": "bash test.sh",
