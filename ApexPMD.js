@@ -52,7 +52,7 @@ class ApexPMD {
                             self.subArray[i] = self.attList.slice((i * size), (i * size) + size);
                         }
                     }
-                    partSubArray = self.subArray.splice(0, 10);
+                    partSubArray = self.subArray.splice(0, 5);
                     if (self.subArray.length==0){
                         self.isContinue = false;
                     }
