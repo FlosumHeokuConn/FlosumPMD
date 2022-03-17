@@ -53,7 +53,7 @@ app.post('//oauth/token', (req, res) => {
 });
 
 app.get('//', function (req, res) {
-    res.send('Ok. Ver:2.3.0. Ver.PMD: 6.37.0');
+    res.send('Ok. Ver:2.4.0. Ver.PMD: 6.43.0');
 });
 
 app.get('//server/log', function (req, res) {
