@@ -161,7 +161,7 @@ class ApexPMD {
                 {
                     if (fs.existsSync('./'+self.jobId+'/ruls.xml'))
                     {
-                        var workerProcess = child_process.execSync('bash dist/pmd-bin/bin/run.sh pmd -failOnViolation false -dir ./'+self.jobId+'/'+' -f csv -r ./'+self.jobId+'/result.csv -rulesets ./'+self.jobId+'/ruls.xml -property problem=false -property package=false -property ruleSet=false -shortnames -t 0',function
+                        var workerProcess = child_process.execSync('bash dist/pmd-bin/bin/run.sh pmd --fail-on-violation false --dir ./'+self.jobId+'/'+' -f csv -r ./'+self.jobId+'/result.csv --rulesets ./'+self.jobId+'/ruls.xml --property problem=false --property package=false --property ruleSet=false --short-names -t 0',function
                             (error, stdout, stderr) {
                             if (error) {
                                 self.createErrorLog(error.stack);
@@ -400,7 +400,7 @@ class ApexPMD {
             try {
                 let self = this;
                 console.log('delete temp folder: '+self.jobId);
-                fs.rmdirSync('./'+self.jobId+'/', { recursive: true });
+                fs.rmSync('./'+self.jobId+'/', { recursive: true });
                 if (self.subArray.length>0){
                     console.log('continue');
                     self.isContinue = true;
