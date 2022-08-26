@@ -226,8 +226,8 @@ class ApexPMD {
                         if (i<1000){
                             self.violList.push(reviewViolation[i]);
                         }
-                    }*/
-                    console.log('limit 1000 = '+ self.violList.length);
+                    }
+                    console.log('limit 1000 = '+ self.violList.length);*/
 
                     self.numberIssuesJob =self.numberIssuesJob + (lines.length -2);
                     self.commentJob = 'Number of issues found: '+ self.numberIssuesJob;
