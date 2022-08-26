@@ -3,8 +3,10 @@ const fs = require('fs');
 const jsforce = require('jsforce');
 const child_process = require('child_process');
 
-const NAME_SPACE_PREFIX = 'Flosum__';
-const URL_POST = '/Flosum/async';
+//const NAME_SPACE_PREFIX = 'Flosum__';
+//const URL_POST = '/Flosum/async';
+const NAME_SPACE_PREFIX = '';
+const URL_POST = '/async';
 
 class ApexPMD {
 
@@ -44,54 +46,54 @@ class ApexPMD {
         return new Promise((resolve, reject) => {
             try {
                 let self = this;
-                    console.log('Start getting attachment');
-                    let size = 100;
-                    let partSubArray = [];
-                    if (self.subArray.length == 0) {
-                        for (let i = 0; i < Math.ceil(self.attList.length / size); i++) {
-                            self.subArray[i] = self.attList.slice((i * size), (i * size) + size);
-                        }
+                console.log('Start getting attachment');
+                let size = 100;
+                let partSubArray = [];
+                if (self.subArray.length == 0) {
+                    for (let i = 0; i < Math.ceil(self.attList.length / size); i++) {
+                        self.subArray[i] = self.attList.slice((i * size), (i * size) + size);
                     }
-                    partSubArray = self.subArray.splice(0, 5);
-                    if (self.subArray.length==0){
-                        self.isContinue = false;
-                    }
-                    var count = partSubArray.length;
-                    for (let i = 0; i < partSubArray.length; i++) {
-                        let bodyPost = {opType: "ATTACHMENT", attachment: JSON.stringify(partSubArray[i])}; //,"00P5g000000y28QEAQ"
-                        self.connSourceOrg.apex.post(URL_POST, bodyPost,
-                            function (err, result) {
-                                if (err) {
-                                    console.log(err.message);
-                                    console.log(err);
-                                    self.createErrorLog(err);
-                                    reject('error');
-                                    return;
-                                }
-                                console.log('Count=' + count);
-                                let mapBody = JSON.parse(result);
-                                var tmpFolder = './' + self.jobId + '/';
-                                if (!fs.existsSync(tmpFolder)) {
-                                    fs.mkdirSync(tmpFolder);
-                                }
+                }
+                partSubArray = self.subArray.splice(0, 5);
+                if (self.subArray.length==0){
+                    self.isContinue = false;
+                }
+                var count = partSubArray.length;
+                for (let i = 0; i < partSubArray.length; i++) {
+                    let bodyPost = {opType: "ATTACHMENT", attachment: JSON.stringify(partSubArray[i])}; //,"00P5g000000y28QEAQ"
+                    self.connSourceOrg.apex.post(URL_POST, bodyPost,
+                        function (err, result) {
+                            if (err) {
+                                console.log(err.message);
+                                console.log(err);
+                                self.createErrorLog(err);
+                                reject('error');
+                                return;
+                            }
+                            console.log('Count=' + count);
+                            let mapBody = JSON.parse(result);
+                            var tmpFolder = './' + self.jobId + '/';
+                            if (!fs.existsSync(tmpFolder)) {
+                                fs.mkdirSync(tmpFolder);
+                            }
 
-                                for (var prop in mapBody) {
-                                    const buff = Buffer.from(mapBody[prop], 'base64');
-                                    var zip = new admZip(buff);
-                                    var zipEntries = zip.getEntries(); // an array of ZipEntry records
-                                    zipEntries.forEach(function (zipEntry) {
-                                        if (zipEntry.name!=null && zipEntry.name!='' && !zipEntry.name.endsWith(".xml") && (zipEntry.name.endsWith(".trigger") || zipEntry.name.endsWith(".page") || zipEntry.name.endsWith(".cls"))) {
-                                            fs.writeFileSync(tmpFolder + zipEntry.name, zipEntry.getData().toString('utf8'));
-                                        }
-                                    });
-                                }
-                                count--;
-                                if (count == 0) {
-                                    console.log('End getting attachment');
-                                    resolve('success');
-                                }
-                            });
-                    }
+                            for (var prop in mapBody) {
+                                const buff = Buffer.from(mapBody[prop], 'base64');
+                                var zip = new admZip(buff);
+                                var zipEntries = zip.getEntries(); // an array of ZipEntry records
+                                zipEntries.forEach(function (zipEntry) {
+                                    if (zipEntry.name!=null && zipEntry.name!='' && !zipEntry.name.endsWith(".xml") && (zipEntry.name.endsWith(".trigger") || zipEntry.name.endsWith(".page") || zipEntry.name.endsWith(".cls"))) {
+                                        fs.writeFileSync(tmpFolder + zipEntry.name, zipEntry.getData().toString('utf8'));
+                                    }
+                                });
+                            }
+                            count--;
+                            if (count == 0) {
+                                console.log('End getting attachment');
+                                resolve('success');
+                            }
+                        });
+                }
 
             } catch (e) {
                 let self = this;
@@ -226,8 +228,8 @@ class ApexPMD {
                         if (i<1000){
                             self.violList.push(reviewViolation[i]);
                         }
-                    }
-                    console.log('limit 1000 = '+ self.violList.length);*/
+                    }*/
+                    console.log('limit 1000 = '+ self.violList.length);
 
                     self.numberIssuesJob =self.numberIssuesJob + (lines.length -2);
                     self.commentJob = 'Number of issues found: '+ self.numberIssuesJob;

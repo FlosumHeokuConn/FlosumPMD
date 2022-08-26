@@ -13,16 +13,21 @@ app.post('//apexPMD', (req, res) => {
     let init = new ApexPMD(data.backUrl, data.sId, data.jobId, data.attList, data.attRuls, data.branchId);
 
     const control = async _ => {
-        console.log('Start');
+        console.log('Start')
         while (init.isContinue) {
             const getAtt =  await init.getAttachment();
+            console.log(getAtt);
             const getRul =  await init.getRuls();
+            console.log(getRul);
             const run =  await init.runPMD();
+            console.log(run);
             const save =  await init.saveResults();
+            console.log(save);
             const updt =  await init.updateObjects();
+            console.log(updt);
             const clean =  await init.cleanFolder();
+            console.log(clean);
         }
-        console.log('Finish');
     };
     control();
     res.send({isSuccess:true,opStatus:'INPROGRESS'});
@@ -53,7 +58,7 @@ app.post('//oauth/token', (req, res) => {
 });
 
 app.get('//', function (req, res) {
-    res.send('Ok. Ver:2.4.0. Ver.PMD: 6.43.0');
+    res.send('Ok. Ver:2.5.0. Ver.PMD: 6.48.0');
 });
 
 app.get('//server/log', function (req, res) {
