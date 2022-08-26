@@ -3,10 +3,8 @@ const fs = require('fs');
 const jsforce = require('jsforce');
 const child_process = require('child_process');
 
-//const NAME_SPACE_PREFIX = 'Flosum__';
-//const URL_POST = '/Flosum/async';
-const NAME_SPACE_PREFIX = '';
-const URL_POST = '/async';
+const NAME_SPACE_PREFIX = 'Flosum__';
+const URL_POST = '/Flosum/async';
 
 class ApexPMD {
 
